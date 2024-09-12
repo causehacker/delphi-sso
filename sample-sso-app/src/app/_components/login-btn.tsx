@@ -1,23 +1,31 @@
 "use client"
 
-import { loginJohnDoe } from "@/lib/api/login";
+import { clientLoginUser } from "@/lib/api/client";
+import { useState } from "react";
+
+import "./login-btn.css";
 
 export default function LoginButton() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const handleLogin = async () => {
     try {
-      // Attempt to login and retrieve an SSO token
-      const token = await loginJohnDoe();
+      const userEmail = prompt("Please enter your email:");
+      if (!userEmail) {
+        console.error('Email is required');
+        return;
+      }
+
+      const token = await clientLoginUser(userEmail);
       
-      // Find the Delphi iframe in the DOM
       const delphiFrame = document.getElementById('delphi-frame') as HTMLIFrameElement | null;
       
       if (delphiFrame && delphiFrame.contentWindow) {
-        // Send the SSO token to the Delphi iframe
         delphiFrame.contentWindow.postMessage({
           type: 'sso_login',
           token: token
         }, '*');
-        // NOTE: In production, replace '*' with the specific origin of your Delphi instance
+        setIsLoggedIn(true);
       } else {
         console.error('Delphi frame not found');
       }
@@ -28,18 +36,11 @@ export default function LoginButton() {
 
   return (
     <button
-      style={{
-        backgroundColor: "#3490dc",
-        color: "white",
-        fontWeight: "bold",
-        padding: "8px 16px",
-        borderRadius: "4px",
-        border: "none",
-        cursor: "pointer",
-      }}
+      className={`login-button ${isLoggedIn ? 'logged-in' : ''}`}
       onClick={handleLogin}
+      disabled={isLoggedIn}
     >
-      Login As John Doe
+      {isLoggedIn ? 'Logged In' : 'Login'}
     </button>
   );
 }
